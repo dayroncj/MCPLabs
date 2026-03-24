@@ -1,0 +1,6 @@
+dotnet/bin/
+dotnet/obj/
+McpServer/bin/
+McpServer/obj/
+weather/bin/
+weather/obj/
