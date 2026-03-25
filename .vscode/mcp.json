@@ -1,0 +1,12 @@
+{
+	"servers": {
+		"ro-snacks": {
+			"type": "stdio",
+			"command": "dotnet",
+			"args": [
+				"C:/temp/MCPLabs/ro_snacks/bin/Debug/net9.0/ro_snacks.dll"
+			]
+		}
+	},
+	"inputs": []
+}
