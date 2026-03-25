@@ -1,0 +1,14 @@
+@SnacksApi_HostAddress = http://localhost:5076
+
+GET {{SnacksApi_HostAddress}}/snacksSchedule/
+Accept: application/json
+
+###
+POST {{SnacksApi_HostAddress}}/snacksSchedule/
+Content-Type: application/json
+
+{
+    "date": "2026-03-20",
+    "user": "Gokú",
+    "snack": "Kiwi"
+}
