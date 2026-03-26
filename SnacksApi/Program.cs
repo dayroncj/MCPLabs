@@ -21,12 +21,15 @@ var snack_schedule = new List<SnackSchedule>
     new(DateOnly.Parse("2026-03-18"), "Monica", "Mandarina"),
 };
 
-app.MapGet("/snacksSchedule", () => snack_schedule).WithName("GetSnacksSchedule");
+app.MapGet("/snacksSchedule", (DateOnly date) =>
+{
+    return snack_schedule.Where(s => s.Date >= date).ToList();
+}).WithName("GetSnacksSchedule");
 
 app.MapPost("/snacksSchedule", (SnackSchedule snackSchedule) =>
 {
     var newSnack = new { snackSchedule.Date, snackSchedule.User, snackSchedule.Snack };
-    
+
     snack_schedule.Add(snackSchedule);
 
     return Results.Created($"/snacksSchedule/{snackSchedule.Date}", newSnack);

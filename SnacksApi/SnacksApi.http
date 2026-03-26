@@ -1,6 +1,6 @@
 @SnacksApi_HostAddress = http://localhost:5076
 
-GET {{SnacksApi_HostAddress}}/snacksSchedule/
+GET {{SnacksApi_HostAddress}}/snacksSchedule/?date=2026-03-16
 Accept: application/json
 
 ###
