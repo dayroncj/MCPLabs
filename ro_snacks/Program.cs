@@ -16,8 +16,9 @@ builder.Logging.ClearProviders();
 
 builder.Services.AddMcpServer()
     .WithStdioServerTransport()
+    .WithResourcesFromAssembly()
     .WithToolsFromAssembly()
-    .WithResourcesFromAssembly();
+    .WithPromptsFromAssembly();
 
 var app = builder.Build();
 
