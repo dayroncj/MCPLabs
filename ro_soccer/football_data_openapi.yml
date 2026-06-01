@@ -1,0 +1,1724 @@
+openapi: 3.0.0
+info:
+  title: football-data.org v4
+  description: >-
+    This collection covers the **football-data.org REST API v4**, a read-only
+    data source for professional football (soccer) information. It provides a
+    structured set of GET requests organized around the API's core resources:
+
+
+    - **Areas** – Retrieve a list of geographical areas (countries/regions) and
+    their details.
+
+    - **Competitions** – Browse available competitions, fetch details for a
+    specific competition, and query related sub-resources such as standings,
+    teams, matches, and top scorers.
+
+    - **Teams** – List teams with pagination support, retrieve a single team's
+    profile, and fetch the match history for a given team.
+
+    - **Matches** – List upcoming or past matches, get details for a specific
+    match, and retrieve head-to-head statistics between two sides.
+
+    - **Persons** – Look up an individual player or staff member and query the
+    matches they have participated in.
+
+
+    All requests use the `{{url}}` variable as the base URL and require a valid
+    API token (set via the `X-Auth-Token` header or the active environment). The
+    collection is intended for exploring, testing, and integrating football data
+    into applications.
+  version: 1.0.0
+servers:
+  - url: http://{{url}}
+paths:
+  /v4/competitions/PL/:
+    get:
+      tags:
+        - default
+      summary: Competition
+      description: >-
+        ## Competition
+
+
+        Returns detailed information about a specific football competition
+        identified by its competition code.
+
+
+        **Method & Path**
+
+        ```
+
+        GET /v4/competitions/{competitionCode}/
+
+        ```
+
+        Full URL: `{{url}}/v4/competitions/PL/`
+
+
+        ---
+
+
+        ### Authentication
+
+
+        Requires an `X-Auth-Token` header containing your API key. This is
+        already configured at the collection level — no additional setup needed
+        per request.
+
+
+        ---
+
+
+        ### Path Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `competitionCode` | string | Yes | The short code identifying the
+        competition (e.g., `PL` for Premier League, `BL1` for Bundesliga, `CL`
+        for Champions League). |
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns a JSON object with the competition's full details, including:
+
+
+        - `id` – Internal numeric ID of the competition.
+
+        - `name` – Full name of the competition (e.g., *"Premier League"*).
+
+        - `code` – Short code used to identify the competition (e.g., `PL`).
+
+        - `type` – Type of competition (`LEAGUE` or `CUP`).
+
+        - `emblem` – URL to the competition's emblem/logo image.
+
+        - `currentSeason` – Object describing the current season, including
+        start/end dates and the current matchday.
+
+        - `seasons` – Array of all seasons available for this competition.
+
+        - `area` – Object with information about the geographical area
+        (country/region) the competition belongs to.
+
+        - `lastUpdated` – ISO 8601 timestamp of the last data update.
+
+
+        ---
+
+
+        ### Notes
+
+
+        - The `PL` code in the example URL refers to the **English Premier
+        League**. Replace it with any valid competition code from the
+        Competition List endpoint.
+
+        - Access to certain competitions may depend on your subscription tier on
+        football-data.org.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/areas/:
+    get:
+      tags:
+        - default
+      summary: Area List
+      description: >-
+        ## Area List
+
+
+        Returns a list of all geographical areas (regions, countries, and
+        continents) available in the football-data.org API. This is useful for
+        discovering which areas are supported and for mapping area IDs used in
+        other endpoints.
+
+
+        **Method & Path**
+
+        ```
+
+        GET /v4/areas/
+
+        ```
+
+        Full URL: `{{url}}/v4/areas/`
+
+
+        ---
+
+
+        ### Authentication
+
+
+        Requires an `X-Auth-Token` header containing your API key. This is
+        already configured at the collection level — no additional setup needed
+        per request.
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns an object with a `count` and an `areas` array. Each area object
+        includes the following fields:
+
+
+        | Field | Type | Description |
+
+        |---|---|---|
+
+        | `id` | integer | Unique identifier for the area |
+
+        | `name` | string | Human-readable name of the area |
+
+        | `countryCode` | string | ISO 3166-1 alpha-3 country code (if
+        applicable) |
+
+        | `ensignUrl` | string \| null | URL to the area's flag/ensign image |
+
+        | `parentArea` | string \| null | Name of the parent area |
+
+        | `parentAreaId` | integer \| null | ID of the parent area |
+
+        | `childAreas` | array | List of child areas nested under this area |
+
+
+        ---
+
+
+        ### Notes
+
+
+        - **Read-only endpoint** — no request body or query parameters required.
+
+        - Available on **all subscription tiers**.
+
+        - Use the returned `id` values to filter competitions, teams, and other
+        resources by area in subsequent requests.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/competitions:
+    get:
+      tags:
+        - default
+      summary: Competition List
+      description: >-
+        ## Competition List
+
+
+        Returns a list of all competitions available through the
+        football-data.org API. Competitions represent football leagues and
+        tournaments (e.g., Premier League, Champions League) across different
+        areas.
+
+
+        **Method & Path**
+
+        ```
+
+        GET /v4/competitions
+
+        ```
+
+        Full URL: `{{url}}/v4/competitions`
+
+
+        ---
+
+
+        ### Authentication
+
+
+        Requires an `X-Auth-Token` header containing your API key. This is
+        already configured at the collection level — no additional setup needed
+        per request.
+
+
+        ---
+
+
+        ### Query Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `areas` | string | No | Comma-separated list of area IDs to filter
+        competitions by geographical area (e.g., `areas=2072,2081`). |
+
+        | `plan` | string | No | Filter by subscription plan tier. Accepted
+        values: `TIER_ONE`, `TIER_TWO`, `TIER_THREE`, `TIER_FOUR`. |
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns a JSON object with a `count` field and a `competitions` array.
+        Each competition object includes:
+
+
+        | Field | Type | Description |
+
+        |---|---|---|
+
+        | `id` | integer | Unique identifier for the competition. |
+
+        | `name` | string | Full name of the competition. |
+
+        | `code` | string | Short code used to reference the competition in
+        other endpoints (e.g., `PL`, `CL`). |
+
+        | `type` | string | Type of competition: `LEAGUE` or `CUP`. |
+
+        | `emblem` | string | URL to the competition's emblem image. |
+
+        | `plan` | string | Subscription tier required to access this
+        competition's data. |
+
+        | `area` | object | Geographical area the competition belongs to,
+        including `id`, `name`, `code`, and `flag`. |
+
+        | `currentSeason` | object | Details of the current season, including
+        start/end dates, current matchday, and winner. |
+
+        | `numberOfAvailableSeasons` | integer | Total number of seasons
+        available for this competition. |
+
+        | `lastUpdated` | string (ISO 8601) | Timestamp of the last data update.
+        |
+
+
+        ---
+
+
+        ### Notes
+
+
+        - Competitions accessible depend on your API subscription plan.
+
+        - Use the `code` value (e.g., `PL`, `BL1`, `CL`) as the
+        `{competitionCode}` path parameter in other competition-related
+        endpoints.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/competitions/PL/standings:
+    get:
+      tags:
+        - default
+      summary: Competition / Standings
+      description: >-
+        Retrieves the standings table for a specific competition.
+
+
+        **Endpoint:** `GET {{url}}/v4/competitions/{competitionCode}/standings`
+
+
+        **Path Parameters:**
+
+        | Parameter | Description |
+
+        |---|---|
+
+        | `competitionCode` | The code identifying the competition (e.g., `PL`
+        for Premier League). |
+
+
+        **Query Parameters:**
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `season` | integer | No | The season year to retrieve standings for
+        (e.g., `2010`). |
+
+        | `matchday` | integer | No | The specific matchday to retrieve
+        standings for (e.g., `3`). |
+
+
+        **Response:**
+
+        Returns the standings for the specified competition, including team
+        rankings, points, wins, draws, losses, goals scored, and goals conceded.
+        Results can be filtered by season and matchday.
+
+
+        **Notes:**
+
+        - If `season` is omitted, the current season's standings are returned.
+
+        - If `matchday` is omitted, the latest available matchday standings are
+        returned.
+      parameters:
+        - name: season
+          in: query
+          schema:
+            type: integer
+          example: '2010'
+        - name: matchday
+          in: query
+          schema:
+            type: integer
+          example: '3'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/competitions/BL1/matches:
+    get:
+      tags:
+        - default
+      summary: Competition / Matches
+      description: >-
+        ## Competition / Matches
+
+
+        Retrieves all matches for a specific competition, optionally filtered by
+        matchday.
+
+
+        ---
+
+
+        ### Endpoint
+
+
+        ```
+
+        GET {{url}}/v4/competitions/{competitionCode}/matches
+
+        ```
+
+
+        **Full example:**
+
+
+        ```
+
+        GET {{url}}/v4/competitions/BL1/matches?matchday=23
+
+        ```
+
+
+        ---
+
+
+        ### Path Parameters
+
+
+        | Parameter | Type | Description |
+
+        |---|---|---|
+
+        | `competitionCode` | string | The code identifying the competition.
+        Currently set to **`BL1`** — *Bundesliga 1*, the German football first
+        division. |
+
+
+        ---
+
+
+        ### Query Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `matchday` | number | No | Filters the results to matches played on a
+        specific matchday. Currently set to **`23`**. |
+
+
+        ---
+
+
+        ### Authentication
+
+
+        The **football-data.org v4** API requires an API token for all requests.
+        Pass your token as a request header:
+
+
+        | Header | Value |
+
+        |---|---|
+
+        | `X-Auth-Token` | `your_api_token_here` |
+
+
+        You can obtain an API token by registering at
+        [football-data.org](https://www.football-data.org).
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns a list of matches for the specified competition and matchday.
+        Each match object includes details such as:
+
+
+        - Match status (scheduled, live, finished, etc.)
+
+        - Home and away teams
+
+        - Score (full time, half time)
+
+        - Matchday number
+
+        - Match date and time (UTC)
+
+
+        ---
+
+
+        ### Example Request
+
+
+        ```http
+
+        GET {{url}}/v4/competitions/BL1/matches?matchday=23
+
+        X-Auth-Token: your_api_token_here
+
+        ```
+      parameters:
+        - name: matchday
+          in: query
+          schema:
+            type: integer
+          example: '23'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/competitions/MLS/teams:
+    get:
+      tags:
+        - default
+      summary: Competition / Teams
+      description: >-
+        # Competition / Teams
+
+
+        Retrieves the list of teams participating in a specific competition.
+
+
+        ## Endpoint
+
+
+        **Method:** `GET`  
+
+        **URL:** `{{url}}/v4/competitions/MLS/teams`
+
+
+        ## Description
+
+
+        This request fetches all teams that are part of the **MLS (Major League
+        Soccer)** competition using the [football-data.org v4
+        API](https://www.football-data.org/documentation/quickstart). The base
+        URL is stored in the `{{url}}` collection variable, making it easy to
+        switch between environments.
+
+
+        ## Authentication
+
+
+        The football-data.org API requires authentication via an API key.
+        Include the following header in your request:
+
+
+        | Header | Value |
+
+        |--------|-------|
+
+        | `X-Auth-Token` | `your_api_key_here` |
+
+
+        You can obtain a free API key by registering at
+        [football-data.org](https://www.football-data.org/client/register).
+
+
+        ## Notes
+
+
+        - The competition code used in this request is `MLS` (Major League
+        Soccer).
+
+        - The response includes team details such as name, short name, crest,
+        and other metadata.
+
+        - Free-tier API keys may have rate limits and restricted access to
+        certain competitions or data fields.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/competitions/PL/scorers:
+    get:
+      tags:
+        - default
+      summary: Competition / Scorer
+      description: >-
+        ## Competition / Scorer
+
+
+        Returns the top scorers for a specific competition, ranked by the number
+        of goals scored.
+
+
+        **Method & Path**
+
+        ```
+
+        GET /v4/competitions/{competitionCode}/scorers
+
+        ```
+
+        Full URL: `{{url}}/v4/competitions/PL/scorers`
+
+
+        ---
+
+
+        ### Authentication
+
+
+        Requires an `X-Auth-Token` header containing your API key. This is
+        already configured at the collection level — no additional setup needed
+        per request.
+
+
+        ---
+
+
+        ### Path Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `competitionCode` | string | Yes | The code identifying the
+        competition. Currently set to **`PL`** — *Premier League*, the English
+        football first division. |
+
+
+        ---
+
+
+        ### Query Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `limit` | integer | No | Limits the number of scorers returned.
+        Defaults to the top 10 if not specified. |
+
+        | `season` | integer | No | Filter scorers by a specific season year
+        (e.g., `2023` for the 2023/24 season). |
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns a JSON object containing:
+
+
+        - **`competition`** – Details of the competition (id, name, code, type,
+        emblem).
+
+        - **`season`** – The current or requested season (id, startDate,
+        endDate, currentMatchday, winner).
+
+        - **`scorers`** – An array of scorer objects, each containing:
+          - **`player`** – Player details (id, name, firstName, lastName, dateOfBirth, nationality, position, shirtNumber).
+          - **`team`** – The player's team (id, name, shortName, tla, crest).
+          - **`playedMatches`** – Number of matches played.
+          - **`goals`** – Total goals scored.
+          - **`assists`** – Total assists (may be `null` if not tracked).
+          - **`penalties`** – Goals scored from penalties.
+
+        ---
+
+
+        ### Example Response (truncated)
+
+
+        ```json
+
+        {
+          "competition": {
+            "id": 2021,
+            "name": "Premier League",
+            "code": "PL"
+          },
+          "season": {
+            "id": 1564,
+            "startDate": "2023-08-11",
+            "endDate": "2024-05-19",
+            "currentMatchday": 38
+          },
+          "scorers": [
+            {
+              "player": {
+                "id": 7839,
+                "name": "Erling Haaland",
+                "nationality": "Norway",
+                "position": "Centre-Forward"
+              },
+              "team": {
+                "name": "Manchester City FC",
+                "tla": "MCI"
+              },
+              "playedMatches": 31,
+              "goals": 27,
+              "assists": 5,
+              "penalties": 5
+            }
+          ]
+        }
+
+        ```
+
+
+        ---
+
+
+        ### Notes
+
+
+        - Results are sorted in descending order by goals scored.
+
+        - The `limit` parameter controls how many scorers are returned (max
+        varies by subscription tier).
+
+        - Assist and penalty data availability may depend on the competition and
+        data coverage level.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/teams/90/:
+    get:
+      tags:
+        - default
+      summary: Team
+      description: >-
+        ## Team
+
+
+        Returns detailed information about a specific football team identified
+        by its team ID.
+
+
+        **Method & Path**
+
+        ```
+
+        GET /v4/teams/{id}/
+
+        ```
+
+        Full URL: `{{url}}/v4/teams/90/`
+
+
+        ---
+
+
+        ### Authentication
+
+
+        Requires an `X-Auth-Token` header containing your API key. This is
+        already configured at the collection level — no additional setup needed
+        per request.
+
+
+        ---
+
+
+        ### Path Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `id` | integer | Yes | The unique identifier of the team. Currently
+        set to **`90`** — *Aston Villa FC*. |
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns a JSON object with full details about the team, including:
+
+
+        - **`id`** – Unique team identifier.
+
+        - **`name`** – Full official name of the team.
+
+        - **`shortName`** – Abbreviated team name.
+
+        - **`tla`** – Three-letter abbreviation (e.g., `AVL`).
+
+        - **`crest`** – URL to the team's crest/logo image.
+
+        - **`address`** – Physical address of the club.
+
+        - **`website`** – Official club website URL.
+
+        - **`founded`** – Year the club was founded.
+
+        - **`clubColors`** – Primary club colors.
+
+        - **`venue`** – Name of the home stadium.
+
+        - **`runningCompetitions`** – List of competitions the team is currently
+        participating in, each with `id`, `name`, `code`, `type`, and `emblem`.
+
+        - **`coach`** – Current head coach details (`id`, `name`, `nationality`,
+        `contract`).
+
+        - **`squad`** – Array of current squad members, each with `id`, `name`,
+        `position`, `dateOfBirth`, `nationality`.
+
+        - **`staff`** – Additional staff members.
+
+        - **`lastUpdated`** – ISO 8601 timestamp of the last data update.
+
+
+        ---
+
+
+        ### Example Response (truncated)
+
+
+        ```json
+
+        {
+          "id": 90,
+          "name": "Aston Villa FC",
+          "shortName": "Aston Villa",
+          "tla": "AVL",
+          "crest": "https://crests.football-data.org/90.png",
+          "founded": 1874,
+          "venue": "Villa Park",
+          "clubColors": "Claret / Sky Blue",
+          "runningCompetitions": [
+            {
+              "id": 2021,
+              "name": "Premier League",
+              "code": "PL",
+              "type": "LEAGUE"
+            }
+          ],
+          "coach": {
+            "id": 5455,
+            "name": "Unai Emery",
+            "nationality": "Spain"
+          },
+          "squad": [
+            {
+              "id": 3655,
+              "name": "Emiliano Martínez",
+              "position": "Goalkeeper",
+              "nationality": "Argentina"
+            }
+          ],
+          "lastUpdated": "2024-01-15T00:00:00Z"
+        }
+
+        ```
+
+
+        ---
+
+
+        ### Notes
+
+
+        - The team ID `90` is hardcoded in this request. Change it in the URL
+        path to query a different team.
+
+        - Use the **Team List** request to discover available team IDs.
+
+        - Squad and staff data availability may vary depending on your API
+        subscription tier.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/teams:
+    get:
+      tags:
+        - default
+      summary: Team List
+      description: >-
+        ## Team List
+
+
+        Returns a paginated list of all football teams available in the
+        football-data.org API.
+
+
+        **Method & Path**
+
+        ```
+
+        GET /v4/teams
+
+        ```
+
+        Full URL: `{{url}}/v4/teams?limit=100&offset=100`
+
+
+        ---
+
+
+        ### Authentication
+
+
+        Requires an `X-Auth-Token` header containing your API key. This is
+        already configured at the collection level — no additional setup needed
+        per request.
+
+
+        ---
+
+
+        ### Query Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `limit` | integer | No | Maximum number of teams to return per page.
+        Currently set to **`100`**. |
+
+        | `offset` | integer | No | Number of teams to skip before starting to
+        return results. Used for pagination. Currently set to **`100`** (i.e.,
+        starts from the 101st team). |
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns a JSON object containing:
+
+
+        - **`count`** – Total number of teams available.
+
+        - **`filters`** – The filters applied to the request (e.g., `limit`,
+        `offset`).
+
+        - **`teams`** – Array of team objects, each including:
+          - `id` – Unique team identifier.
+          - `name` – Full team name.
+          - `shortName` – Abbreviated team name.
+          - `tla` – Three-letter abbreviation.
+          - `crest` – URL to the team's crest/logo image.
+          - `address` – Team's physical address.
+          - `website` – Official team website URL.
+          - `founded` – Year the team was founded.
+          - `clubColors` – Team's official colors.
+          - `venue` – Name of the home stadium.
+          - `runningCompetitions` – List of competitions the team is currently participating in.
+          - `area` – Geographical area (country/region) the team belongs to.
+          - `lastUpdated` – Timestamp of the last data update.
+
+        ---
+
+
+        ### Pagination
+
+
+        Use `limit` and `offset` together to paginate through the full list of
+        teams:
+
+
+        - **Page 1:** `limit=100&offset=0`
+
+        - **Page 2:** `limit=100&offset=100`
+
+        - **Page 3:** `limit=100&offset=200`
+
+
+        The current configuration (`limit=100&offset=100`) retrieves the second
+        page of 100 teams.
+
+
+        ---
+
+
+        ### Notes
+
+
+        - This is a **read-only** endpoint (`GET`).
+
+        - No request body is required.
+
+        - The `{{url}}` variable should be set to
+        `https://api.football-data.org` in your active environment.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: '100'
+        - name: offset
+          in: query
+          schema:
+            type: integer
+          example: '100'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/teams/19/matches:
+    get:
+      tags:
+        - default
+      summary: Team / Matches
+      description: >-
+        ## Team / Matches
+
+
+        Returns all matches for a specific football team identified by its team
+        ID.
+
+
+        **Method & Path**
+
+        ```
+
+        GET /v4/teams/{id}/matches
+
+        ```
+
+        Full URL: `{{url}}/v4/teams/19/matches`
+
+
+        ---
+
+
+        ### Authentication
+
+
+        Requires an `X-Auth-Token` header containing your API key. This is
+        already configured at the collection level — no additional setup needed
+        per request.
+
+
+        ---
+
+
+        ### Path Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `id` | integer | Yes | The unique identifier of the team. Currently
+        set to **`19`** — *Eintracht Frankfurt*. |
+
+
+        ---
+
+
+        ### Query Parameters
+
+
+        This endpoint supports optional filters to narrow down the matches
+        returned:
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `dateFrom` | string (date) | No | Start date filter in `YYYY-MM-DD`
+        format. Returns matches on or after this date. |
+
+        | `dateTo` | string (date) | No | End date filter in `YYYY-MM-DD`
+        format. Returns matches on or before this date. |
+
+        | `season` | integer | No | Filter by season year (e.g., `2023` for the
+        2023/24 season). |
+
+        | `competitions` | string | No | Comma-separated list of competition
+        codes to filter by (e.g., `PL,BL1`). |
+
+        | `status` | string | No | Filter by match status. Possible values:
+        `SCHEDULED`, `LIVE`, `IN_PLAY`, `PAUSED`, `FINISHED`, `SUSPENDED`,
+        `POSTPONED`, `CANCELLED`, `AWARDED`. |
+
+        | `venue` | string | No | Filter by venue type: `HOME` or `AWAY`. |
+
+        | `limit` | integer | No | Maximum number of matches to return. |
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns a JSON object containing:
+
+
+        - **`filters`** – The filters applied to the query.
+
+        - **`resultSet`** – Metadata about the result set, including total count
+        and date range.
+
+        - **`matches`** – An array of match objects, each containing:
+          - `id` – Unique match identifier.
+          - `utcDate` – Match date and time in UTC.
+          - `status` – Current match status (e.g., `FINISHED`, `SCHEDULED`).
+          - `matchday` – The matchday number within the competition.
+          - `stage` – The stage of the competition (e.g., `REGULAR_SEASON`).
+          - `competition` – The competition the match belongs to.
+          - `homeTeam` / `awayTeam` – Team details including name and crest.
+          - `score` – Full-time, half-time, and extra-time scores.
+          - `referees` – List of referees assigned to the match.
+
+        ---
+
+
+        ### Notes
+
+
+        - The team ID `19` corresponds to **Eintracht Frankfurt** in the
+        football-data.org database.
+
+        - Results are ordered by date ascending by default.
+
+        - Access to certain competitions or historical data may depend on your
+        API subscription tier.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/persons/16275:
+    get:
+      tags:
+        - default
+      summary: Person
+      description: >-
+        ## Person
+
+
+        Returns detailed information about a specific person (player, coach, or
+        referee) identified by their unique ID in the football-data.org API.
+
+
+        **Method & Path**
+
+        ```
+
+        GET /v4/persons/{id}
+
+        ```
+
+        Full URL: `{{url}}/v4/persons/16275`
+
+
+        ---
+
+
+        ### Authentication
+
+
+        Requires an `X-Auth-Token` header containing your API key. This is
+        already configured at the collection level — no additional setup needed
+        per request.
+
+
+        ---
+
+
+        ### Path Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `id` | integer | Yes | The unique identifier of the person. Currently
+        set to **`16275`**. |
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns a JSON object with details about the person, including:
+
+
+        - `id` – Unique identifier of the person.
+
+        - `name` – Full name.
+
+        - `firstName` / `lastName` – First and last name.
+
+        - `dateOfBirth` – Date of birth in ISO 8601 format.
+
+        - `nationality` – Nationality of the person.
+
+        - `section` – Role section (e.g., `Player`, `Coach`).
+
+        - `position` – Playing position (for players).
+
+        - `shirtNumber` – Shirt number (for players, if available).
+
+        - `lastUpdated` – Timestamp of the last data update.
+
+        - `currentTeam` – Object with details about the person's current team,
+        including team ID, name, area, competition, contract dates, and role.
+
+
+        ---
+
+
+        ### Example Response (truncated)
+
+
+        ```json
+
+        {
+          "id": 16275,
+          "name": "Lionel Messi",
+          "firstName": "Lionel Andrés",
+          "lastName": "Messi",
+          "dateOfBirth": "1987-06-24",
+          "nationality": "Argentina",
+          "section": "Player",
+          "position": "Offence",
+          "shirtNumber": 10,
+          "lastUpdated": "2024-01-01T00:00:00Z",
+          "currentTeam": {
+            "id": 1611,
+            "name": "Inter Miami CF",
+            "area": { "id": 2162, "name": "USA" }
+          }
+        }
+
+        ```
+
+
+        ---
+
+
+        ### Notes
+
+
+        - The person ID in the URL (`16275`) can be replaced with any valid
+        person ID obtained from team or competition endpoints.
+
+        - This endpoint is read-only and does not require a request body.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/persons/16275/matches:
+    get:
+      tags:
+        - default
+      summary: Person / Matches
+      description: >-
+        ## Person / Matches
+
+
+        Retrieves a list of matches associated with a specific person (player or
+        coach) identified by their unique person ID.
+
+
+        ### Endpoint
+
+
+        ```
+
+        GET {{url}}/v4/persons/{id}/matches
+
+        ```
+
+
+        ### Path Parameters
+
+
+        | Parameter | Type | Description |
+
+        |-----------|------|-------------|
+
+        | `id` | integer | The unique identifier of the person. Example: `16275`
+        |
+
+
+        ### Query Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |-----------|------|----------|-------------|
+
+        | `limit` | integer | No | Maximum number of matches to return. Defaults
+        to `10`. Example: `40` |
+
+
+        ### Response
+
+
+        Returns a paginated list of matches in which the specified person has
+        participated. Each match object includes details such as:
+
+
+        - Match date and status
+
+        - Home and away teams
+
+        - Score
+
+        - Competition and season information
+
+
+        ### Notes
+
+
+        - Requires a valid API token via the `X-Auth-Token` header (set at the
+        collection level).
+
+        - The `{{url}}` variable should be set to
+        `https://api.football-data.org` in your active environment.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: '40'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/matches/327117:
+    get:
+      tags:
+        - default
+      summary: Match
+      description: >-
+        ## Match
+
+
+        Returns detailed information about a specific football match identified
+        by its unique match ID.
+
+
+        **Method & Path**
+
+        ```
+
+        GET /v4/matches/{id}
+
+        ```
+
+        Full URL: `{{url}}/v4/matches/327117`
+
+
+        ---
+
+
+        ### Authentication
+
+
+        Requires an `X-Auth-Token` header containing your API key. This is
+        already configured at the collection level — no additional setup needed
+        per request.
+
+
+        ---
+
+
+        ### Path Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `id` | integer | Yes | The unique identifier of the match. Example:
+        `327117` |
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns a match object containing:
+
+
+        - **id** – Unique match identifier.
+
+        - **competition** – The competition the match belongs to (id, name,
+        code, type, emblem).
+
+        - **season** – Season details including start/end dates and current
+        matchday.
+
+        - **utcDate** – Scheduled date and time of the match in UTC.
+
+        - **status** – Current match status (e.g., `SCHEDULED`, `IN_PLAY`,
+        `FINISHED`, `POSTPONED`).
+
+        - **matchday** – The matchday number within the season.
+
+        - **stage** – Stage of the competition (e.g., `REGULAR_SEASON`).
+
+        - **group** – Group name, if applicable (null for league matches).
+
+        - **lastUpdated** – Timestamp of the last data update.
+
+        - **homeTeam** / **awayTeam** – Team details including id, name,
+        shortName, tla, crest, coach, formation, and leagueRank.
+
+        - **score** – Score breakdown with winner, duration, and goals for
+        fullTime, halfTime, extraTime, and penalties.
+
+        - **goals** – List of goal events with minute, type, team, and scorer
+        details.
+
+        - **penalties** – List of penalty shootout results (if applicable).
+
+        - **bookings** – List of booking events (yellow/red cards) with minute,
+        team, and player.
+
+        - **substitutions** – List of substitution events with minute, team,
+        player in/out.
+
+        - **odds** – Betting odds (home win, draw, away win), if available.
+
+        - **referees** – List of referees assigned to the match.
+
+
+        ---
+
+
+        ### Notes
+
+
+        - The match ID in this request (`327117`) is hardcoded as an example.
+        Replace it with any valid match ID from the API.
+
+        - Match data availability (lineups, goals, bookings, etc.) depends on
+        the competition tier and your API subscription plan.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/matches/:
+    get:
+      tags:
+        - default
+      summary: Match List
+      description: >-
+        ## Match List
+
+
+        Returns a list of matches across all competitions available through the
+        football-data.org API. Results can be filtered using query parameters to
+        narrow down by competition, date range, status, and more.
+
+
+        **Method & Path**
+
+        ```
+
+        GET /v4/matches/
+
+        ```
+
+        Full URL: `{{url}}/v4/matches/`
+
+
+        ---
+
+
+        ### Authentication
+
+
+        Requires an `X-Auth-Token` header containing your API key. This is
+        already configured at the collection level — no additional setup needed
+        per request.
+
+
+        ---
+
+
+        ### Query Parameters
+
+
+        | Parameter | Type | Required | Description |
+
+        |---|---|---|---|
+
+        | `competitions` | string | No | Comma-separated list of competition
+        codes to filter matches (e.g., `PL,BL1`). |
+
+        | `ids` | string | No | Comma-separated list of match IDs to retrieve
+        specific matches. |
+
+        | `date` | string (YYYY-MM-DD) | No | Filter matches for a specific
+        date. |
+
+        | `dateFrom` | string (YYYY-MM-DD) | No | Start of a date range filter.
+        |
+
+        | `dateTo` | string (YYYY-MM-DD) | No | End of a date range filter. |
+
+        | `status` | string | No | Filter by match status. Possible values:
+        `SCHEDULED`, `LIVE`, `IN_PLAY`, `PAUSED`, `FINISHED`, `POSTPONED`,
+        `SUSPENDED`, `CANCELLED`. |
+
+
+        ---
+
+
+        ### Request Headers
+
+
+        | Header | Value | Description |
+
+        |---|---|---|
+
+        | `X-Unfold-Lineups` | `true` | When `true`, includes the full lineup
+        details for each match in the response. |
+
+        | `X-Unfold-Goals` | `true` | When `true`, includes goal event details
+        for each match. |
+
+        | `X-Unfold-Bookings` | `false` *(disabled)* | When enabled and set to
+        `true`, includes booking (yellow/red card) events. |
+
+        | `X-Unfold-Subs` | `false` *(disabled)* | When enabled and set to
+        `true`, includes substitution events. |
+
+
+        ---
+
+
+        ### Response
+
+
+        Returns a JSON object with the following top-level fields:
+
+
+        | Field | Type | Description |
+
+        |---|---|---|
+
+        | `filters` | object | The filters applied to the query. |
+
+        | `resultSet` | object | Metadata about the result set, including
+        `count`, `competitions`, `first`, and `last` match dates. |
+
+        | `matches` | array | List of match objects. Each match includes
+        competition info, season, UTC date, status, matchday, stage, group,
+        teams (home/away), scores, odds, referees, and optionally lineups,
+        goals, bookings, and substitutions depending on the `X-Unfold-*`
+        headers. |
+
+
+        ---
+
+
+        ### Notes
+
+
+        - This endpoint returns matches across **all competitions** the
+        authenticated user has access to. Use the `competitions` query parameter
+        to scope results to specific leagues.
+
+        - The `X-Unfold-*` headers control the verbosity of the response.
+        Enabling them increases payload size but provides richer match detail.
+
+        - Date filters (`dateFrom` / `dateTo`) follow the **ISO 8601** format:
+        `YYYY-MM-DD`.
+      parameters:
+        - name: X-Unfold-Lineups
+          in: header
+          schema:
+            type: boolean
+          example: 'true'
+        - name: X-Unfold-Bookings
+          in: header
+          schema:
+            type: boolean
+          example: 'false'
+        - name: X-Unfold-Subs
+          in: header
+          schema:
+            type: boolean
+          example: 'false'
+        - name: X-Unfold-Goals
+          in: header
+          schema:
+            type: boolean
+          example: 'true'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /v4/matches/327125/head2head:
+    get:
+      tags:
+        - default
+      summary: Match / Head2Head
+      description: >-
+        ## Head-to-Head Match Data
+
+
+        This endpoint retrieves comprehensive head-to-head match statistics
+        between two teams for a specific match.
+
+
+        ### Purpose
+
+        Fetches historical head-to-head match data between the teams involved in
+        the specified match (ID: 327125), allowing you to analyze their
+        competitive history and performance metrics against each other.
+
+
+        ### Parameters
+
+
+        **limit** (Query Parameter)
+
+        - **Value**: 15
+
+        - **Purpose**: Limits the number of historical head-to-head matches
+        returned in the response
+
+        - **Default**: 15
+
+        - **Description**: Controls how many past matches between the two teams
+        are included in the result set. Adjust this value to retrieve more or
+        fewer historical matches.
+
+
+        ### Using the {{url}} Variable
+
+
+        The `{{url}}` variable is a collection-level variable that contains the
+        base URL for the football-data.org API. 
+
+
+        **How to set it up:**
+
+        1. Navigate to the collection variables
+
+        2. Define `url` with the value: `https://www.football-data.org`
+
+        3. The full endpoint URL will resolve to:
+        `https://www.football-data.org/v4/matches/327125/head2head?limit=15`
+
+
+        ### Expected Response
+
+
+        The endpoint returns a JSON object containing:
+
+        - **Head-to-head match records** between the two teams
+
+        - **Historical statistics** including wins, losses, and draws
+
+        - **Match details** for each historical encounter (up to the limit
+        specified)
+
+        - **Team information** for both competitors
+
+
+        ### Example Response Structure
+
+        ```json
+
+        {
+          "head2head": {
+            "numberOfMatches": 15,
+            "totalGoals": 45,
+            "team1": { /* team data */ },
+            "team2": { /* team data */ },
+            "matches": [ /* array of match objects */ ]
+          }
+        }
+
+        ```
+
+
+        ### Authentication
+
+        Ensure you have a valid API key configured in your request headers for
+        football-data.org API access.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+          example: '15'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
