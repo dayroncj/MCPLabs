@@ -1,10 +1,12 @@
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 using ro_soccer.Tools;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = Host.CreateEmptyApplicationBuilder(settings: null);
 
-// builder.Logging.ClearProviders();
+builder.Logging.ClearProviders();
 
 var httpClient = new HttpClient();
 httpClient.BaseAddress = new Uri("https://api.football-data.org");
@@ -14,7 +16,7 @@ var discoverer = new ToolsDiscoverer(File.ReadAllText("football_data_openapi.yml
 var tools = discoverer.GetMcpTools();
 
 builder.Services.AddMcpServer()
-    .WithHttpTransport()
+    .WithStdioServerTransport()
     .WithResourcesFromAssembly()
     .WithPromptsFromAssembly() // Responde con los tools descubiertos cuando el cliente MCP ejecute tools/list
     .WithListToolsHandler(async (request, ct) => // Delega a callApiEndpointAsync cuando el cliente MCP ejecute tools/call
@@ -33,20 +35,11 @@ builder.Services.AddMcpServer()
 
         return new CallToolResult
         {
-            Content = new[] { new TextContentBlock { Text = result } }
+            Content = [new TextContentBlock { Text = result }]
         };
     });
 
 var app = builder.Build();
 
-app.MapGet("/health", () => "OK");
-app.MapMcp("/mcp");
+await app.RunAsync();
 
-app.Lifetime.ApplicationStarted.Register(() =>
-{
-    Console.WriteLine($"Servidor MCP iniciado en {string.Join(", ", app.Urls)}");
-    Console.WriteLine("Endpoint MCP disponible en /mcp");
-    Console.WriteLine("Health check disponible en /health");
-});
-
-app.Run();
