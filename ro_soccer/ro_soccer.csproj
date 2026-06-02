@@ -12,4 +12,10 @@
     <PackageReference Include="ModelContextProtocol.AspNetCore" Version="1.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="football_data_openapi.yml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

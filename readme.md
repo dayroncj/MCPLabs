@@ -63,3 +63,40 @@ Abrir otra terminal y ejecutar el inspector
 cd ro_snacks
 npx @modelcontextprotocol/inspector dotnet run --project .
 ```
+
+## Cómo publicar MCP Server en Azure?
+
+### Prerequisitos
+Crear web application 
+`dotnet new web -n ro_soccer`
+
+E instalar:
+`dotnet add package ModelContextProtocol --prerelease`
+`dotnet add package ModelContextProtocol.AspNetCore --prerelease`
+
+Tener instalado az login
+
+### Usando Azure CLI
+az login
+
+#### Crear grupo de recursos
+az group create --name rg-mcp-soccer --location eastus
+
+#### Crear App Service Plan
+az appservice plan create --name plan-mcp-soccer \
+  --resource-group rg-mcp-soccer \
+  --sku B1 --is-linux
+
+#### Crear la Web App
+az webapp create --name ro-soccer-mcp \
+  --resource-group rg-mcp-soccer \
+  --plan plan-mcp-soccer \
+  --runtime "DOTNETCORE:10.0"
+
+#### Publicar (desde la carpeta ro_soccer/)
+cd ro_soccer
+dotnet publish -c Release -o ./publish
+az webapp deploy --resource-group rg-mcp-soccer \
+  --name ro-soccer-mcp \
+  --src-path ./publish \
+  --type zip
