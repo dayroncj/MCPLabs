@@ -64,9 +64,9 @@ cd ro_snacks
 npx @modelcontextprotocol/inspector dotnet run --project .
 ```
 
-## Cómo publicar MCP Server en Azure?
+## 4. Cómo publicar MCP Server en Azure?
 
-### Prerequisitos
+### 4.1 Prerequisitos
 Crear web application 
 `dotnet new web -n ro_soccer`
 
@@ -76,27 +76,75 @@ E instalar:
 
 Tener instalado az login
 
-### Usando Azure CLI
+### 4.2 Usando Azure CLI
 az login
 
-#### Crear grupo de recursos
+#### 4.3 Crear grupo de recursos
 az group create --name rg-mcp-soccer --location eastus
 
-#### Crear App Service Plan
+#### 4.4 Crear App Service Plan
 az appservice plan create --name plan-mcp-soccer \
   --resource-group rg-mcp-soccer \
   --sku B1 --is-linux
 
-#### Crear la Web App
+#### 4.5 Crear la Web App
 az webapp create --name ro-soccer-mcp \
   --resource-group rg-mcp-soccer \
   --plan plan-mcp-soccer \
   --runtime "DOTNETCORE:10.0"
 
-#### Publicar (desde la carpeta ro_soccer/)
+#### 4.6 Publicar (desde la carpeta ro_soccer/)
 cd ro_soccer
 dotnet publish -c Release -o ./publish
 az webapp deploy --resource-group rg-mcp-soccer \
   --name ro-soccer-mcp \
   --src-path ./publish \
   --type zip
+
+## 5. Alternativa: Usando Azure Container Apps
+
+Esta opción no requiere App Service Plan y evita problemas de cuota de VMs.
+
+#### 5.1 Prerrequisitos
+```bash
+az extension add --name containerapp
+az provider register --namespace Microsoft.App
+az provider register --namespace Microsoft.OperationalInsights
+```
+
+#### 5.2 Crear grupo de recursos
+`az group create --name rg-mcp-soccer --location eastus`
+
+#### 5.3 Crear el entorno de Container Apps
+```
+az containerapp env create \
+  --name env-mcp-soccer \
+  --resource-group rg-mcp-soccer \
+  --location eastus
+```
+
+#### 5.4 Publicar y desplegar desde la carpeta ro_soccer
+```
+cd ro_soccer
+dotnet publish -c Release -o ./publish
+zip -r publish.zip ./publish
+
+az containerapp create \
+  --name ro-soccer-mcp \
+  --resource-group rg-mcp-soccer \
+  --environment env-mcp-soccer \
+  --artifact ./publish.zip \
+  --ingress external \
+  --target-port 8080
+```
+
+#### 5.5 Obtener el url del servicio
+```
+az containerapp show \
+  --name ro-soccer-mcp \
+  --resource-group rg-mcp-soccer \
+  --query properties.configuration.ingress.fqdn \
+  --output tsv
+```
+
+La URL resultante será la base para conectar el cliente MCP, por ejemplo: https://ro-soccer-mcp.<id>.eastus.azurecontainerapps.io/sse
